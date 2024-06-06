@@ -1,0 +1,13 @@
+{
+  "name": "project_ts_pphp/project_ts_pphp",
+  "description": "A small PHP framework",
+  "type": "project",
+  "require": {
+    "ext-pdo": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/"
+    }
+  }
+}
