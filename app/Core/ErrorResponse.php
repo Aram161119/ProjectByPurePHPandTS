@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Core;
+namespace App\Core\Responses;
 
-use App\Exceptions\UnauthorizedException;
 use App\Exceptions\RouteNotFoundException;
+use App\Exceptions\UnauthorizedException;
 use Throwable;
 
 class ErrorResponse
