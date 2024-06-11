@@ -2,7 +2,7 @@
 
 namespace App\Database\Migrations;
 
-use PDO;
+use App\Core\Database;
 
 class CreateAdminsTable
 {
@@ -11,7 +11,7 @@ class CreateAdminsTable
      */
     public static function up()
     {
-        $pdo = self::getDB();
+        $pdo = Database::getInstance();
 
         $sql = "
             CREATE TABLE IF NOT EXISTS admins (
@@ -26,18 +26,5 @@ class CreateAdminsTable
         ";
 
         $pdo->exec($sql);
-    }
-
-    /**
-     * @return PDO
-     */
-    private static function getDB(): PDO
-    {
-        // Adjust the DSN, username, and password as needed
-        $dsn = 'mysql:host=mysql;port=3306;dbname=your_database';
-        $username = 'your_username';
-        $password = 'your_password';
-
-        return new PDO($dsn, $username, $password);
     }
 }

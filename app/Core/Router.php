@@ -3,54 +3,115 @@
 namespace App\Core;
 
 use App\Exceptions\RouteNotFoundException;
-use App\Middleware\AdminMiddleware;
 
 class Router
 {
     private array $routes = [];
-    private array $middleware = [];
+    private array $arguments = [];
 
-    public function add($route, $callback, $middleware = null): void
+    /**
+     * Add a route to the routing table.
+     *
+     * @param string $method
+     * @param string $route
+     * @param array $callback
+     * @param string|null $middleware
+     * @return void
+     */
+    public function add(string $method, string $route, array $callback, ?string $middleware = null): void
     {
-        $this->routes[$route] = $callback;
-        $this->middleware[$route] = $middleware;
+        $this->routes[] = [
+            'method' => $method,
+            'route' => $route,
+            'callback' => $callback,
+            'middleware' => $middleware,
+        ];
     }
 
     /**
+     * Dispatch the route, creating the controller object and running the action method.
+     *
+     * @param string $uri
+     * @param string $method
+     * @return void
      * @throws RouteNotFoundException
      */
-    public function dispatch($uri): void
+    public function dispatch(string $uri, string $method)
     {
-        $uri = parse_url($uri, PHP_URL_PATH);
+        $parsedUrl = parse_url($uri);
+        $path = $parsedUrl['path'] ?? '';
 
-        if (array_key_exists($uri, $this->routes)) {
-            $this->handleMiddleware($uri);
+        foreach ($this->routes as $route) {
+            if ($route['route'] === $path && $route['method'] === $method) {
+                $this->handleMiddleware($route['middleware']);
 
-            $callback = $this->routes[$uri];
-            [$controller, $method] = $callback;
+                [$controller, $method] = $route['callback'];
+                $controllerInstance = new $controller();
 
-            // Instantiate controller and call method
-            $controllerInstance = new $controller();
-            $controllerInstance->$method();
-        } else {
-            $this->handleNotFound();
+                if (!method_exists($controllerInstance, $method)) {
+                    throw new RouteNotFoundException("Method $method not found in controller $controller");
+                }
+
+                return $controllerInstance->$method();
+            }
         }
+
+        $this->handleNotFound();
     }
 
-    private function handleMiddleware(string $uri): void
+    /**
+     * Handle the middleware for the route.
+     *
+     * @param string|null $middleware
+     * @return void
+     */
+    private function handleMiddleware(?string $middleware): void
     {
-        if (isset($this->middleware[$uri])) {
-            $middleware = $this->middleware[$uri];
+        if ($middleware !== null) {
             $middlewareInstance = new $middleware();
             $middlewareInstance->handle();
         }
     }
 
     /**
+     * Handle the route not found scenario.
+     *
+     * @return void
      * @throws RouteNotFoundException
      */
     private function handleNotFound(): void
     {
         throw new RouteNotFoundException('404 - Not Found');
+    }
+
+    /**
+     * Define a group of routes with a common middleware.
+     *
+     * @param array $routes
+     * @param string|null $middleware
+     * @return void
+     */
+    public function group(array $routes, ?string $middleware = null): void
+    {
+        foreach ($routes as $route) {
+            [$method, $route, $callback] = $route;
+            $this->add($method, $route, $callback, $middleware);
+        }
+    }
+
+    /**
+     * @param string $path
+     * @param array $segmentsMap
+     * @return array
+     */
+    private function createSegmentsMap(string $path, array $segmentsMap = []) : array
+    {
+        $array_path = explode('/', $path);
+        array_shift($array_path);
+        foreach($array_path as $key => $segment)
+            if (preg_match('/{(.*?)}/', $segment))
+                $segmentsMap[$key] = $segment;
+
+        return $segmentsMap;
     }
 }

@@ -3,23 +3,43 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Controllers\AdminController;
+use App\Controllers\AuthController;
+use App\Controllers\HomeController;
+use App\Controllers\ProductController;
 use App\Core\ErrorResponse;
 use App\Core\Router;
-use App\Controllers\HomeController;
+use App\Middleware\AuthMiddleware;
 
+/**
+ * Error and Exception handling
+ */
+error_reporting(E_ALL);
+
+/**
+ *  Sessions
+ */
+session_start();
+
+/**
+ * Routing
+ */
 $router = new Router();
 
-// Определение маршрутов
-$router->add('/', [HomeController::class, 'index']);
+$router->add('POST', '/login', [AuthController::class, 'login']);
 
-$router->add('/admin', [AdminController::class, 'index']);
-$router->add('/admin/create', [AdminController::class, 'create']);
-$router->add('/admin/store', [AdminController::class, 'store']);
+$router->group([
+    ['GET', '/', [HomeController::class, 'index']],
+    ['POST', '/logout', [AuthController::class, 'logout']],
+    ['GET', '/admin', [AdminController::class, 'index']],
+    ['POST', '/admin/create', [AdminController::class, 'create']],
+    ['POST', '/admin/store', [AdminController::class, 'store']],
+    ['POST', '/products/store', [ProductController::class, 'store']],
+    ['GET', '/products', [ProductController::class, 'index']],
+    ['POST', '/import-products', [ProductController::class, 'import']],
+], AuthMiddleware::class);
 
 try {
-    $router->dispatch($_SERVER['REQUEST_URI']);
+    echo $router->dispatch($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
 } catch (\Throwable $e) {
     ErrorResponse::handle($e);
 }
-
-

@@ -3,38 +3,18 @@
 namespace App\Managers;
 
 use App\Core\BaseManager;
-use App\Models\Admin;
+use App\Models\Product;
 
-class AdminManager extends BaseManager
+class ProductManager extends BaseManager
 {
     public function __construct()
     {
-        $model = new Admin();
+        $model = new Product();
         parent::__construct($model);
     }
 
-    /**
-     * @param string $email
-     * @return string|null
-     */
-    public function getHashedPassword(string $email): ?string
+    public function import(int $adminId, array $data)
     {
-        $result = $this->model->query("SELECT password FROM " . Admin::$table . " WHERE email = ?", [$email]);
-        return $result ? $result[0]['password'] : null;
-    }
 
-    /**
-     * @param array $fields
-     * @return bool
-     */
-    public function create(array $fields): bool
-    {
-        $admin = $this->model->query("SELECT * FROM " . Admin::$table . " WHERE email = ?", [$fields['email']]);
-
-        if (!$admin) {
-            return parent::create($fields);
-        }
-
-        return false;
     }
 }

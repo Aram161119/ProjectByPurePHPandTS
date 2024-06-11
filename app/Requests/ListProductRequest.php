@@ -4,6 +4,6 @@ namespace App\Requests;
 
 use App\Core\Request;
 
-class ListAdminRequest extends Request
+class ListProductRequest extends Request
 {
 }

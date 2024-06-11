@@ -2,40 +2,57 @@
 
 namespace App\Controllers;
 
-use App\Models\Admin;
+use App\Core\Controller;
+use App\Core\ErrorResponse;
+use App\Exceptions\ValidationException;
+use App\Managers\AdminManager;
+use App\Requests\CreateAdminRequest;
 
-class AdminController
+class AdminController extends Controller
 {
-    public function index()
+    /**
+     * @return bool|string
+     */
+    public function index(): bool|string
     {
-        // Retrieve all admins and pass to the view (assuming a view function is available)
-        $admins = Admin::getAll();
-        // Render the view (this assumes you have a rendering method)
-        // Example: view('admin.index', ['admins' => $admins]);
-        echo '<pre>';
-        print_r($admins);
-        echo '</pre>';
+        $manager = new AdminManager();
+
+        $data = $manager->index();
+
+        return $this->successResponse($data);
     }
 
-    public function create()
-    {
-        // Render a form for creating a new admin
-        // Example: view('admin.create');
-        echo "Create Admin Form";
-    }
-
+    /**
+     * @return bool|string|void
+     */
     public function store()
     {
-        // Handle the form submission for creating a new admin
-        $data = [
-            'name' => $_POST['name'],
-            'email' => $_POST['email'],
-            'password' => password_hash($_POST['password'], PASSWORD_BCRYPT),
-        ];
+        try {
+            $request = new CreateAdminRequest();
 
-        Admin::create($data);
+            if (!$request->validate()) {
+                throw new ValidationException();
+            }
 
-        // Redirect to admin index (you may need to adjust the path)
-        header('Location: /admin');
+            $data = $request->getData();
+
+            $manager = new AdminManager();
+
+            $criteria = [
+                'value' => $data['email'],
+                'field' => 'email',
+                'operator' => '='
+            ];
+
+            if ($manager->find($criteria)) {
+                throw new ValidationException('Email already used');
+            }
+
+            $manager->create($data);
+
+            return $this->successResponse(code: 204);
+        } catch (\Throwable $e) {
+            return ErrorResponse::handle($e);
+        }
     }
 }

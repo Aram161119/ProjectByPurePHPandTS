@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use App\Core\Database;
 
-class CreateAdminsTable
+class CreateProductsTable
 {
     /**
      * @return void
@@ -14,14 +14,15 @@ class CreateAdminsTable
         $pdo = Database::getInstance();
 
         $sql = "
-            CREATE TABLE IF NOT EXISTS admins (
+            CREATE TABLE IF NOT EXISTS products (
                 id INT AUTO_INCREMENT PRIMARY KEY,
+                admin_id INT NOT NULL,
                 name VARCHAR(255) NOT NULL,
-                email VARCHAR(255) NOT NULL UNIQUE,
-                password VARCHAR(255) NOT NULL,
+                type INT NOT NULL,
+                price DECIMAL(10, 2) NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                deleted_at TIMESTAMP DEFAULT NULL 
+                FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE CASCADE ON UPDATE CASCADE
             );
         ";
 

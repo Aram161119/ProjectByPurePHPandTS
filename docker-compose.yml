@@ -12,6 +12,7 @@ services:
     depends_on:
       - mysql
     restart: unless-stopped
+
   nginx:
     build:
       context: .
@@ -25,6 +26,7 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+
   mysql:
     image: mysql:8.0
     environment:
@@ -38,3 +40,6 @@ services:
     restart: unless-stopped
     networks:
       - app-network
+
+networks:
+  app-network:

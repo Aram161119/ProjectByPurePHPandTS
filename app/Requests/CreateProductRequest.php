@@ -4,7 +4,7 @@ namespace App\Requests;
 
 use App\Core\Request;
 
-class CreateAdminRequest extends Request
+class CreateProductRequest extends Request
 {
     /**
      * @return string[]
@@ -13,8 +13,8 @@ class CreateAdminRequest extends Request
     {
         return [
             'name' => 'required|string|min:2|max:255',
-            'email' => 'required|email',
-            'password' => 'required|string|min:6|max:255',
+            'type' => 'required|integer',
+            'price' => 'required|integer',
         ];
     }
 }

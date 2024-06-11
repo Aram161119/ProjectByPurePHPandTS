@@ -2,8 +2,7 @@
 
 namespace App\Database\Seeders;
 
-use App\Models\Admin;
-use PDO;
+use App\Managers\AdminManager;
 
 class RootAdminSeeder
 {
@@ -12,18 +11,15 @@ class RootAdminSeeder
      */
     public static function seed()
     {
-        $dsn = 'mysql:host=mysql;port=3306;dbname=your_database';
-        $username = 'your_username';
-        $password = 'your_password';
+        $password = password_hash('123456', PASSWORD_BCRYPT);
 
-        $db = new PDO($dsn, $username, $password);
+        $data = [
+            'name' => 'admin',
+            'password' => $password,
+            'email' => 'aram.m@invo.am'
+        ];
 
-        $name = 'admin';
-        $password = '123456';
-        $email = 'aram.m@invo.am';
-
-        $admin = new Admin($db);
-        $admin->create($name, $password, $email);
+        (new AdminManager())->create($data);
 
         echo "Root admin seeded successfully.\n";
     }

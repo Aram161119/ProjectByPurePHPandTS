@@ -2,39 +2,50 @@
 
 namespace App\Controllers;
 
-use App\Models\Admin;
-use PDO;
+use App\Core\Controller;
+use App\Core\ErrorResponse;
+use App\Exceptions\UnauthorizedException;
+use App\Managers\AdminManager;
+use App\Requests\LoginRequest;
+use App\Exceptions\ValidationException;
 
-class AuthController
+class AuthController extends Controller
 {
     /**
-     * @param PDO $db
+     * @return bool|string|void
      */
-    public function __construct(private PDO $db) {}
-
-    /**
-     * @param string $email
-     * @param string $password
-     * @return bool
-     */
-    public function login(string $email, string $password): bool
+    public function login()
     {
-        $admin = new Admin($this->db);
-        $hashedPassword = $admin->getHashedPassword($email);
+        try {
+            $loginRequest = new LoginRequest();
 
-        if ($hashedPassword && password_verify($password, $hashedPassword)) {
-            $_SESSION['admin_email'] = $email;
-            return true;
+            if (!$loginRequest->validate()) {
+                throw new ValidationException();
+            }
+
+            $data = $loginRequest->getData();
+
+            $manager = new AdminManager();
+            $hashedPassword = $manager->getHashedPassword($data['email']);
+
+            if ($hashedPassword && password_verify($data['password'], $hashedPassword)) {
+                $_SESSION['admin'] = $data['email'];
+                return $this->successResponse(code: 204);
+            }
+
+            throw new UnauthorizedException('Authorization failed');
+        } catch (\Throwable $e) {
+            return ErrorResponse::handle($e);
         }
-
-        return false;
     }
 
     /**
-     * @return void
+     * @return bool|string
      */
-    public function logout(): void
+    public function logout(): bool|string
     {
-        unset($_SESSION['admin_email']);
+        session_unset();
+        session_destroy();
+        return $this->successResponse(code: 204);
     }
 }

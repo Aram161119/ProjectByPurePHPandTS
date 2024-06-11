@@ -1,39 +1,40 @@
 <?php
 
-namespace App\Models;
+namespace App\Managers;
 
-use App\Core\Database;
-use PDO;
+use App\Core\BaseManager;
+use App\Models\Admin;
 
-class Admin
+class AdminManager extends BaseManager
 {
-    private static string $table = 'admins';
-    protected PDO $db;
-
     public function __construct()
     {
-        $this->db = Database::getInstance();
+        $model = new Admin();
+        parent::__construct($model);
     }
 
-    public function create(array $data): void
-    {
-        $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
-        $stmt = $this->db->prepare("INSERT INTO admins (name, email, password) VALUES (?, ?, ?)");
-        $stmt->execute([$data['name'], $data['email'], $hashedPassword]);
-    }
-
-    public static function getAll(): array
-    {
-        $db = Database::getInstance();
-        $stmt = $db->query('SELECT * FROM ' . self::$table);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
+    /**
+     * @param string $email
+     * @return string|null
+     */
     public function getHashedPassword(string $email): ?string
     {
-        $stmt = $this->db->prepare("SELECT password FROM admins WHERE email = ?");
-        $stmt->execute([$email]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row ? $row['password'] : null;
+        $result = $this->model->query("SELECT password FROM " . Admin::$table . " WHERE email = ?", [$email]);
+        return $result ? $result[0]['password'] : null;
+    }
+
+    /**
+     * @param array $fields
+     * @return bool
+     */
+    public function create(array $fields): bool
+    {
+        $admin = $this->model->query("SELECT * FROM " . Admin::$table . " WHERE email = ?", [$fields['email']]);
+
+        if (!$admin) {
+            return parent::create($fields);
+        }
+
+        return false;
     }
 }
